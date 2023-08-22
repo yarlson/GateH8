@@ -40,7 +40,7 @@ GateH8 is a flexible and customizable API Gateway designed to proxy requests to 
 3. Run the Gateway:
 
     ```bash
-    ./gateh8
+    ./gateh8 -a [address:port] # Optional: Use the -a or --addr flags to specify the server address and port.
     ```
 
 4. Your API Gateway is up and listening on port 1973. Direct your requests accordingly.
@@ -151,7 +151,12 @@ _Note_: CORS settings for an endpoint will override CORS settings for its parent
 Once you've set up your `config.json`, simply execute the built binary:
 
 ```bash
-./gateh8
+./gateh8 -a [address:port] # Optional: Use the -a or --addr flags to specify the server address and port.
+```
+
+To get help regarding available flags:
+```bash
+./gateh8 -h
 ```
 
 Your API Gateway will start listening on port 1973.
