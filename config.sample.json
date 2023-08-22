@@ -5,6 +5,14 @@
   },
   "vhosts": {
     "example1.com": {
+      "cors": {
+        "allowedOrigins": ["https://*", "http://*"],
+        "allowedMethods": ["GET", "POST"],
+        "allowedHeaders": ["Accept", "Authorization"],
+        "exposedHeaders": ["Link"],
+        "allowCredentials": false,
+        "maxAge": 300
+      },
       "endpoints": [
         {
           "path": "/*",
