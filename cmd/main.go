@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"github.com/yarlson/GateH8/internal"
 	"net/http"
 	"os"
@@ -12,6 +13,12 @@ import (
 func main() {
 	// Get the logger.
 	log := internal.GetLogger()
+
+	// Define the command-line argument for the server's address:port.
+	var serverAddr string
+	flag.StringVar(&serverAddr, "addr", ":1973", "Server address and port")
+	flag.StringVar(&serverAddr, "a", ":1973", "Server address and port (shorthand)")
+	flag.Parse()
 
 	// Fetch the API Gateway's configuration using the utility function from the internal package.
 	err, config := internal.GetConfig()
@@ -26,7 +33,7 @@ func main() {
 
 	// Create a new server and configure it.
 	srv := &http.Server{
-		Addr:    ":1973",
+		Addr:    serverAddr,
 		Handler: r,
 	}
 
@@ -51,7 +58,7 @@ func main() {
 	}()
 
 	// Log the start of the server and the port on which it is running.
-	log.Info("Starting server on port :1973")
+	log.Infof("Server is ready to handle requests at %s", serverAddr)
 
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		// Log and exit if there's an error starting the HTTP server.
