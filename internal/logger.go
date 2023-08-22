@@ -37,6 +37,10 @@ func JsonLogger(next http.Handler) http.Handler {
 	})
 }
 
+func GetLogger() *logrus.Logger {
+	return L
+}
+
 // init initializes the logger instance L and sets its format to JSON
 // so that all logs produced are structured accordingly.
 func init() {
