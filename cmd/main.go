@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"github.com/yarlson/GateH8/internal"
 	"net/http"
 	"os"
@@ -18,6 +19,10 @@ func main() {
 	var serverAddr string
 	flag.StringVar(&serverAddr, "addr", ":1973", "Server address and port")
 	flag.StringVar(&serverAddr, "a", ":1973", "Server address and port (shorthand)")
+
+	// Customize the default flag.Usage function
+	flag.Usage = Usage()
+
 	flag.Parse()
 
 	// Fetch the API Gateway's configuration using the utility function from the internal package.
@@ -67,4 +72,13 @@ func main() {
 
 	<-done
 	log.Info("Server stopped")
+}
+
+// Usage returns a function that prints the command-line usage message.
+func Usage() func() {
+	return func() {
+		fmt.Printf("Usage of %s:\n", os.Args[0])
+		fmt.Println("  -a, --addr string:   Server address and port (default \":1973\")")
+		fmt.Println("  -h:                 Show this help message")
+	}
 }
