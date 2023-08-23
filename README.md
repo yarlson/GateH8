@@ -12,6 +12,7 @@ GateH8 is a flexible and customizable API Gateway designed to proxy requests to 
     - [Virtual Hosts and Routes](#virtual-hosts-and-routes)
     - [Wildcard Domain Routing](#wildcard-domain-routing)
     - [CORS Settings](#cors-settings)
+    - [TLS Configuration for Secure Connections](#tls-configuration-for-secure-connections)
 - [Running the Service](#running-the-service)
 - [Contributing](#contributing)
 - [License](#license)
@@ -145,6 +146,36 @@ To configure Cross-Origin Resource Sharing (CORS) for either the entire virtual 
 ```
 
 _Note_: CORS settings for an endpoint will override CORS settings for its parent virtual host.
+
+### TLS Configuration for Secure Connections
+
+GateH8 supports secure HTTPS connections via TLS. This can be configured on a per-virtual host basis using the SSL settings.
+
+In your `config.json`, specify the paths to the SSL certificate and its corresponding key for each virtual host that needs to be served over HTTPS.
+
+```json
+{
+  ...
+  "vhosts": {
+    "secure.domain.com": {
+      "tls": {
+        "cert": "path/to/cert.pem",
+        "key": "path/to/private-key.pem"
+      },
+      ...
+    },
+    ...
+  }
+}
+```
+
+#### Important Points:
+
+- If **all** vhosts have SSL configurations, the gateway will exclusively use HTTPS.
+- If **none** of the vhosts have SSL configurations, the gateway will use plain HTTP.
+- If **some** vhosts are configured with SSL and some are not, the gateway will panic during startup, as this is considered an inconsistent configuration. Ensure that either all vhosts are secured, or none of them are.
+
+For added security, it's recommended to secure all vhosts. This not only ensures data encryption during transit but also provides trust and confidence to your API users.
 
 ## Running the Service
 

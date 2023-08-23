@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"github.com/yarlson/GateH8/internal"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"time"
 )
 
@@ -65,9 +67,37 @@ func main() {
 	// Log the start of the server and the port on which it is running.
 	log.Infof("Server is ready to handle requests at %s", serverAddr)
 
-	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		// Log and exit if there's an error starting the HTTP server.
-		log.Fatal("Error starting server:", err)
+	if config.UseTLS {
+		srv.TLSConfig = &tls.Config{
+			GetCertificate: func(info *tls.ClientHelloInfo) (*tls.Certificate, error) {
+				for vhostName, vhost := range config.Vhosts {
+					if vhost.TLS != nil {
+						// Using wildcard pattern matching to determine the appropriate certificate.
+						match, err := filepath.Match(vhostName, info.ServerName)
+						if err != nil {
+							return nil, err
+						}
+
+						if match {
+							cert, err := tls.LoadX509KeyPair(vhost.TLS.Cert, vhost.TLS.Key)
+							if err != nil {
+								return nil, err
+							}
+							return &cert, nil
+						}
+					}
+				}
+				return nil, fmt.Errorf("no certificate for given hostname: %s", info.ServerName)
+			},
+		}
+
+		if err := srv.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
+			log.Fatal("Error starting HTTPS server:", err)
+		}
+	} else {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal("Error starting HTTP server:", err)
+		}
 	}
 
 	<-done

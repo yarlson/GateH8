@@ -2,6 +2,7 @@ package internal
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 )
@@ -46,11 +47,18 @@ func (b *Backend) GetProcessedURL(endpointPath string) string {
 	return strings.Replace(b.URL, "${path}", endpointPath, -1)
 }
 
-// Vhost groups a set of endpoints and specifies any CORS configuration
+// Vhost groups a set of endpoints and specifies any CORS and TLS configuration
 // that is applied at the vhost level.
 type Vhost struct {
 	CORS      *CORSConfig `json:"cors,omitempty"`
 	Endpoints []Endpoint  `json:"endpoints"`
+	TLS       *TLSConfig  `json:"tls,omitempty"`
+}
+
+// TLSConfig defines the TLS certificate and key files to be used by the API Gateway.
+type TLSConfig struct {
+	Cert string `json:"cert"`
+	Key  string `json:"key"`
 }
 
 // Config provides a comprehensive view of the API Gateway's configuration,
@@ -59,20 +67,40 @@ type Vhost struct {
 type Config struct {
 	APIGateway APIGateway       `json:"apiGateway"`
 	Vhosts     map[string]Vhost `json:"vhosts"`
+	UseTLS     bool
 }
 
 // GetConfig reads the API Gateway's configuration from a JSON file and returns it.
 // It handles any issues with reading or parsing the configuration file.
-func GetConfig() (error, Config) {
+func GetConfig() (error, *Config) {
 	content, err := os.ReadFile("config.json")
 	if err != nil {
-		L.Fatal("Error reading config.json:", err)
+		return fmt.Errorf("error reading config.json: %w", err), nil
 	}
 
 	var config Config
 	err = json.Unmarshal(content, &config)
 	if err != nil {
-		L.Fatal("Error unmarshaling config:", err)
+		return fmt.Errorf("error parsing config.json: %w", err), nil
 	}
-	return err, config
+
+	// Check the TLS configurations for all vhosts
+	vhostsWithSSL := 0
+	for _, vhost := range config.Vhosts {
+		if vhost.TLS != nil {
+			vhostsWithSSL++
+		}
+	}
+
+	// If there are any vhosts with TLS configured, then all vhosts should have TLS configured.
+	if vhostsWithSSL > 0 && vhostsWithSSL != len(config.Vhosts) {
+		return fmt.Errorf("configuration error: either all vhosts should have TLS configured, or none should"), nil
+	}
+
+	// If there are vhosts with TLS configured, then the API Gateway should use TLS.
+	if vhostsWithSSL > 0 {
+		config.UseTLS = true
+	}
+
+	return err, &config
 }

@@ -4,8 +4,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/go-chi/hostrouter"
+	"net"
 	"net/http"
+	"path/filepath"
 )
 
 // generateCORS creates a CORS middleware handler based on a given configuration.
@@ -21,11 +22,48 @@ func generateCORS(c *CORSConfig) func(http.Handler) http.Handler {
 	})
 }
 
+// WildcardHostRouter is a router that handles hostnames with wildcards and discards ports.
+type WildcardHostRouter struct {
+	routes map[string]*chi.Mux
+}
+
+// NewWildcardHostRouter initializes a new WildcardHostRouter.
+func NewWildcardHostRouter() *WildcardHostRouter {
+	return &WildcardHostRouter{
+		routes: make(map[string]*chi.Mux),
+	}
+}
+
+// Map maps a host pattern to a router.
+func (whr *WildcardHostRouter) Map(pattern string, router *chi.Mux) {
+	whr.routes[pattern] = router
+}
+
+// Route routes based on host patterns.
+func (whr *WildcardHostRouter) Route(w http.ResponseWriter, r *http.Request) {
+	host, _, _ := net.SplitHostPort(r.Host)
+	if host == "" {
+		host = r.Host // in case SplitHostPort failed, which means there was no port
+	}
+	for pattern, router := range whr.routes {
+		if matched, _ := filepath.Match(pattern, host); matched {
+			router.ServeHTTP(w, r)
+			return
+		}
+	}
+	http.Error(w, "Host not found", http.StatusNotFound)
+}
+
+// Handler is a http.Handler implementation of Route.
+func (whr *WildcardHostRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	whr.Route(w, r)
+}
+
 // NewRouter constructs a new router based on a given configuration.
 // The router manages incoming requests, directing them to the appropriate backend based on the requested host and path.
 // Each virtual host (vhost) can have its own set of endpoints and CORS settings.
 // Endpoints can additionally override the vhost's CORS settings if needed.
-func NewRouter(config Config) *chi.Mux {
+func NewRouter(config *Config) *chi.Mux {
 	r := chi.NewRouter()
 
 	// Middleware layers to enrich request context and manage common API functionalities.
@@ -34,7 +72,7 @@ func NewRouter(config Config) *chi.Mux {
 	r.Use(JsonLogger)           // A custom logger for logging request/response in JSON format.
 	r.Use(middleware.Recoverer) // Recovers from panics and logs the stack trace.
 
-	hr := hostrouter.New() // A router to manage routing based on request host (vhost).
+	hr := NewWildcardHostRouter() // A router to manage routing based on request host (vhost).
 
 	// Iterate over each virtual host in the configuration.
 	for vhost, vhostConfig := range config.Vhosts {
