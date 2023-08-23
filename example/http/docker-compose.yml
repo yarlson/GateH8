@@ -1,0 +1,20 @@
+services:
+  gateh8:
+    image: yarlson/gateh8:0.1.0
+    ports:
+      - "80:80"
+    volumes:
+      - ./config.json:/config.json
+    command: ["-a", ":80"]
+
+  nginx1:
+    image: nginx:latest
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/index1.html:/usr/share/nginx/html/index.html
+
+  nginx2:
+    image: nginx:latest
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/index2.html:/usr/share/nginx/html/index.html

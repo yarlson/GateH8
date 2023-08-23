@@ -1,0 +1,32 @@
+{
+  "apiGateway": {
+    "name": "MyAPIGateway",
+    "version": "1.0.0"
+  },
+  "vhosts": {
+    "*": {
+      "endpoints": [
+        {
+          "path": "/1",
+          "methods": [
+            "GET"
+          ],
+          "backend": {
+            "url": "http://nginx1/",
+            "timeout": 5000
+          }
+        },
+        {
+          "path": "/2",
+          "methods": [
+            "GET"
+          ],
+          "backend": {
+            "url": "http://nginx2/",
+            "timeout": 5000
+          }
+        }
+      ]
+    }
+  }
+}
