@@ -1,0 +1,9 @@
+*.pem
+.dockerignore
+.gitignore
+Dockerfile
+LICENSE
+README.md
+config.json
+config.sample.json
+gateh8
