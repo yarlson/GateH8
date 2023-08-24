@@ -3,7 +3,6 @@
 # Define variables
 IMAGE_NAME="gateh8"
 DOCKER_USERNAME="yarlson"
-VERSION="0.1.0"
 
 # Create a new builder instance
 docker buildx create --name multiarchbuilder --use
