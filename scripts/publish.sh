@@ -12,6 +12,3 @@ docker buildx inspect multiarchbuilder --bootstrap
 
 # Build and push the multi-architecture image
 docker buildx build --platform linux/amd64,linux/arm64 -t "$DOCKER_USERNAME/$IMAGE_NAME:$VERSION" --push .
-
-# Cleanup
-docker buildx rm multiarchbuilder
