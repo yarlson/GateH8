@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 // CreateProxyHandler generates a handler to proxy requests to a specified backend.
@@ -56,5 +58,82 @@ func CreateProxyHandler(backend *Backend) http.HandlerFunc {
 		body, _ := io.ReadAll(resp.Body)
 		w.WriteHeader(resp.StatusCode)
 		_, _ = w.Write(body)
+	}
+}
+
+// CreateWebSocketProxyHandler generates a handler to proxy WebSocket requests to a specified backend.
+func CreateWebSocketProxyHandler(endpoint Endpoint) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		upgrader := websocket.Upgrader{
+			ReadBufferSize:  endpoint.WebSocket.ReadBufferSize,
+			WriteBufferSize: endpoint.WebSocket.WriteBufferSize,
+			CheckOrigin: func(r *http.Request) bool {
+				origin := r.Header.Get("Origin")
+				for _, allowed := range endpoint.WebSocket.AllowedOrigins {
+					if allowed == "*" {
+						return true
+					}
+					if origin == allowed {
+						return true
+					}
+				}
+				return false
+			},
+		}
+
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			L.Error("Failed to upgrade the connection:", err)
+			return
+		}
+		defer func(conn *websocket.Conn) { _ = conn.Close() }(conn)
+
+		// Create a connection to the backend WebSocket server.
+		backendConn, _, err := websocket.DefaultDialer.Dial(endpoint.Backend.URL, nil)
+		if err != nil {
+			L.Error("Failed to connect to the backend WebSocket server:", err)
+			return
+		}
+		defer func(backendConn *websocket.Conn) { _ = backendConn.Close() }(backendConn)
+
+		// Channel to signal the main goroutine to exit after both read and write goroutines are done.
+		done := make(chan struct{})
+
+		defer close(done)
+
+		// Start goroutine to read from client and write to backend.
+		go func() {
+			for {
+				_, message, err := conn.ReadMessage()
+				if err != nil {
+					L.Error("Error reading from WebSocket:", err)
+					break
+				}
+				err = backendConn.WriteMessage(websocket.TextMessage, message)
+				if err != nil {
+					L.Error("Error writing to WebSocket:", err)
+					break
+				}
+			}
+		}()
+
+		// Start goroutine to read from backend and write to client.
+		go func() {
+			for {
+				_, message, err := backendConn.ReadMessage()
+				if err != nil {
+					L.Error("Error reading from WebSocket:", err)
+					break
+				}
+				err = conn.WriteMessage(websocket.TextMessage, message)
+				if err != nil {
+					L.Error("Error writing to WebSocket:", err)
+					break
+				}
+			}
+		}()
+
+		// Wait for both read and write goroutines to finish.
+		<-done
 	}
 }

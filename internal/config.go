@@ -24,14 +24,23 @@ type CORSConfig struct {
 	MaxAge           int      `json:"maxAge"`
 }
 
+// WebSocketConfig contains configurations specific to WebSocket proxying.
+// This includes the backend service URL, as well as the read and write buffer sizes.
+type WebSocketConfig struct {
+	ReadBufferSize  int      `json:"readBufferSize"`
+	WriteBufferSize int      `json:"writeBufferSize"`
+	AllowedOrigins  []string `json:"allowedOrigins"`
+}
+
 // Endpoint represents a specific route or API endpoint, detailing its
 // path, the supported methods, backend service configuration, and any
 // CORS policies specific to this endpoint.
 type Endpoint struct {
-	CORS    *CORSConfig `json:"cors,omitempty"`
-	Path    string      `json:"path"`
-	Methods []string    `json:"methods"`
-	Backend *Backend    `json:"backend"`
+	CORS      *CORSConfig      `json:"cors,omitempty"`
+	Path      string           `json:"path"`
+	Methods   []string         `json:"methods"`
+	Backend   *Backend         `json:"backend"`
+	WebSocket *WebSocketConfig `json:"websocket,omitempty"`
 }
 
 // Backend defines the actual service to which the API Gateway will
