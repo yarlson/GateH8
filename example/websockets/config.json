@@ -1,0 +1,23 @@
+{
+  "apiGateway": {
+    "name": "MyAPIGateway",
+    "version": "1.0.0"
+  },
+  "vhosts": {
+    "*": {
+      "endpoints": [
+        {
+          "path": "/ws",
+          "backend": {
+            "url": "ws://host.docker.internal:8080/ws"
+          },
+          "websocket": {
+            "readBufferSize": 1024,
+            "writeBufferSize": 1024,
+            "allowedOrigins": ["*"]
+          }
+        }
+      ]
+    }
+  }
+}

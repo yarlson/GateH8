@@ -98,8 +98,12 @@ func NewRouter(config *Config) *chi.Mux {
 			}
 
 			// Bind all the allowed methods for the endpoint to the respective handler.
-			for _, method := range endpoint.Methods {
-				endpointRouter.Method(method, endpoint.Path, CreateProxyHandler(endpoint.Backend))
+			if endpoint.WebSocket != nil {
+				endpointRouter.HandleFunc(endpoint.Path, CreateWebSocketProxyHandler(endpoint))
+			} else {
+				for _, method := range endpoint.Methods {
+					endpointRouter.Method(method, endpoint.Path, CreateProxyHandler(endpoint.Backend))
+				}
 			}
 		}
 

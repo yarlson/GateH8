@@ -1,6 +1,6 @@
 # GateH8: A Configurable API Gateway
 
-GateH8 is a flexible and customizable API Gateway designed to proxy requests to different backends based on a JSON configuration. With the ability to utilize path variables, path wildcards, and domain wildcards, the gateway offers fine-grained control over routing behaviors, embodying simplicity and flexibility.
+GateH8 is a flexible and customizable API Gateway designed to proxy requests to different backends based on a JSON configuration. With the ability to utilize path variables, path wildcards, domain wildcards, and websocket support, the gateway offers fine-grained control over routing behaviors, embodying simplicity and flexibility.
 
 ## Table of Contents
 
@@ -12,6 +12,7 @@ GateH8 is a flexible and customizable API Gateway designed to proxy requests to 
     - [Virtual Hosts and Routes](#virtual-hosts-and-routes)
     - [Wildcard Domain Routing](#wildcard-domain-routing)
     - [CORS Settings](#cors-settings)
+    - [WebSocket Support](#websocket-support)
     - [TLS Configuration for Secure Connections](#tls-configuration-for-secure-connections)
 - [Running the Service](#running-the-service)
 - [Contributing](#contributing)
@@ -146,6 +147,42 @@ To configure Cross-Origin Resource Sharing (CORS) for either the entire virtual 
 ```
 
 _Note_: CORS settings for an endpoint will override CORS settings for its parent virtual host.
+
+### WebSocket Support
+
+GateH8 provides support for proxying WebSocket connections. To configure a WebSocket endpoint, include a `websocket` key in your endpoint definition with settings for buffering and origin policies. Here's an example:
+
+```json
+{
+    "apiGateway": {
+        "name": "MyAPIGateway",
+        "version": "1.0.0"
+    },
+    "vhosts": {
+        "*": {
+            "endpoints": [
+                {
+                    "path": "/ws",
+                    "backend": {
+                        "url": "ws://127.0.0.1:8080/ws"
+                    },
+                    "websocket": {
+                        "readBufferSize": 1024,
+                        "writeBufferSize": 1024,
+                        "allowedOrigins": ["*"]
+                    }
+                }
+            ]
+        }
+    }
+}
+```
+
+WebSocket Configuration Options:
+
+- `readBufferSize`: This defines the buffer size for reading from the WebSocket connection.
+- `writeBufferSize`: This specifies the buffer size for writing to the WebSocket connection.
+- `allowedOrigins`: A list of origins allowed to connect to the WebSocket endpoint. Use ["*"] to allow any origin.
 
 ### TLS Configuration for Secure Connections
 

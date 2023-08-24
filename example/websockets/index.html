@@ -1,0 +1,41 @@
+<!-- static/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Client</title>
+</head>
+<body>
+<ul id="messages"></ul>
+
+<script>
+    const messagesList = document.getElementById("messages");
+
+    const socket = new WebSocket("ws://localhost:1973/ws");
+
+    socket.onopen = function(event) {
+        console.log("Connected to server");
+    };
+
+    socket.onmessage = function(event) {
+        const li = document.createElement("li");
+        li.textContent = event.data;
+        messagesList.appendChild(li);
+    };
+
+    socket.onerror = function(error) {
+        console.log(`WebSocket Error: ${error}`);
+    };
+
+    socket.onclose = function(event) {
+        if (event.wasClean) {
+            console.log(`Connection closed cleanly, code=${event.code}, reason=${event.reason}`);
+        } else {
+            console.log('Connection died');
+        }
+    };
+</script>
+</body>
+</html>
