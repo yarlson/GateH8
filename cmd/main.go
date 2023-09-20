@@ -5,7 +5,9 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"github.com/yarlson/GateH8/internal"
+	"github.com/yarlson/GateH8/config"
+	"github.com/yarlson/GateH8/logger"
+	"github.com/yarlson/GateH8/router"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,7 +17,7 @@ import (
 
 func main() {
 	// Get the logger.
-	log := internal.GetLogger()
+	log := logger.GetLogger()
 
 	// Define the command-line argument for the server's address:port.
 	var serverAddr string
@@ -28,7 +30,7 @@ func main() {
 	flag.Parse()
 
 	// Fetch the API Gateway's configuration using the utility function from the internal package.
-	err, config := internal.GetConfig()
+	err, config := config.GetConfig()
 	if err != nil {
 		// Log and exit if there's an error loading the configuration.
 		log.Fatal("Error loading configuration:", err)
@@ -36,7 +38,7 @@ func main() {
 
 	// Initialize the router with the provided configuration. This router handles
 	// requests based on the vhost, endpoint, and backend service configurations.
-	r := internal.NewRouter(config)
+	r := router.NewRouter(config)
 
 	// Create a new server and configure it.
 	srv := &http.Server{

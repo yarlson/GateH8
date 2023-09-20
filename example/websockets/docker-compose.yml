@@ -1,6 +1,6 @@
 services:
   gateh8:
-    image: yarlson/gateh8:0.2.0
+    image: yarlson/gateh8:0.2.1
     ports:
       - "80:80"
     volumes:

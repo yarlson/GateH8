@@ -13,7 +13,7 @@
 <script>
     const messagesList = document.getElementById("messages");
 
-    const socket = new WebSocket("ws://localhost:1973/ws");
+    const socket = new WebSocket("ws://localhost:80/ws");
 
     socket.onopen = function(event) {
         console.log("Connected to server");

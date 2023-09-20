@@ -1,11 +1,14 @@
 services:
   gateh8:
-    image: yarlson/gateh8:0.1.0
+    image: yarlson/gateh8:0.2.1
     ports:
       - "80:80"
     volumes:
       - ./config.json:/config.json
     command: ["-a", ":80"]
+    depends_on:
+      - nginx1
+      - nginx2
 
   nginx1:
     image: nginx:latest
