@@ -1,0 +1,76 @@
+project_name: gateh8
+
+builds:
+  - id: gateh8
+    main: ./cmd/main.go
+    binary: gateh8
+    goos:
+      - linux
+      - darwin
+      - windows
+      - freebsd
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - '-s -w -extldflags "-static"'
+    hooks:
+      pre:
+        - go mod download
+      post:
+        - echo "Build completed"
+
+archives:
+  - id: windows
+    format: zip
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    builds:
+      - gateh8
+    files:
+      - license*
+      - readme*
+  - format: tar.gz
+    builds:
+      - gateh8
+    files:
+      - license*
+      - readme*
+
+dockers:
+  - image_templates:
+      - 'yarlson/gateh8:{{ .Tag }}-amd64'
+    use: buildx
+    dockerfile: Dockerfile.goreleaser
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/amd64"
+      - "--builder=mybuilder"
+    goarch: amd64
+  - image_templates:
+      - 'yarlson/gateh8:{{ .Tag }}-arm64'
+    dockerfile: Dockerfile.goreleaser
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/arm64"
+      - "--builder=mybuilder"
+    goarch: arm64
+
+docker_manifests:
+  - name_template: 'yarlson/gateh8:{{ .Tag }}'
+    image_templates:
+      - 'yarlson/gateh8:{{ .Tag }}-amd64'
+      - 'yarlson/gateh8:{{ .Tag }}-arm64'
+
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+
+snapshot:
+  name_template: "{{ .Tag }}-SNAPSHOT-{{ .ShortCommit }}"
+
+changelog:
+  skip: true
