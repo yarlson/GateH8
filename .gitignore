@@ -2,3 +2,4 @@ gateh8
 config.json
 *.pem
 !example/*/config.json
+/dist/
