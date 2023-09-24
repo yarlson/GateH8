@@ -29,13 +29,10 @@ func handleConnection(w http.ResponseWriter, r *http.Request) {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case t := <-ticker.C:
-			message := fmt.Sprintf("Message sent at %s", t)
-			if err := conn.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
-				return
-			}
+	for t := range ticker.C {
+		message := fmt.Sprintf("Message sent at %s", t)
+		if err := conn.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
+			return
 		}
 	}
 }
