@@ -81,35 +81,39 @@ type Config struct {
 
 // GetConfig reads the API Gateway's configuration from a JSON file and returns it.
 // It handles any issues with reading or parsing the configuration file.
-func GetConfig() (error, *Config) {
+func GetConfig() (*Config, error) {
 	content, err := os.ReadFile("config.json")
 	if err != nil {
-		return fmt.Errorf("error reading config.json: %w", err), nil
+		return nil, fmt.Errorf("error reading config.json: %w", err)
 	}
 
-	var config Config
-	err = json.Unmarshal(content, &config)
-	if err != nil {
-		return fmt.Errorf("error parsing config.json: %w", err), nil
+	config := new(Config) // Use new() to get a pointer directly, prevent local-to-heap migration.
+	if err = json.Unmarshal(content, config); err != nil {
+		return nil, fmt.Errorf("error parsing config.json: %w", err)
 	}
 
-	// Check the TLS configurations for all vhosts
-	vhostsWithSSL := 0
+	anyVhostWithSSL, allVhostsWithSSL := check(config)
+
+	// If there's any vhost with TLS configured but not all of them have, then it's a config error.
+	if anyVhostWithSSL && !allVhostsWithSSL {
+		return nil, fmt.Errorf("configuration error: either all vhosts should have TLS configured, or none should")
+	}
+
+	config.UseTLS = anyVhostWithSSL
+	return config, nil
+}
+
+func check(config *Config) (bool, bool) {
+	// Check if any vhost has TLS configured
+	anyVhostWithSSL := false
+	allVhostsWithSSL := true
+
 	for _, vhost := range config.Vhosts {
 		if vhost.TLS != nil {
-			vhostsWithSSL++
+			anyVhostWithSSL = true
+		} else {
+			allVhostsWithSSL = false
 		}
 	}
-
-	// If there are any vhosts with TLS configured, then all vhosts should have TLS configured.
-	if vhostsWithSSL > 0 && vhostsWithSSL != len(config.Vhosts) {
-		return fmt.Errorf("configuration error: either all vhosts should have TLS configured, or none should"), nil
-	}
-
-	// If there are vhosts with TLS configured, then the API Gateway should use TLS.
-	if vhostsWithSSL > 0 {
-		config.UseTLS = true
-	}
-
-	return err, &config
+	return anyVhostWithSSL, allVhostsWithSSL
 }

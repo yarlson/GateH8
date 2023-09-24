@@ -30,7 +30,7 @@ func main() {
 	flag.Parse()
 
 	// Fetch the API Gateway's configuration using the utility function from the internal package.
-	err, config := config.GetConfig()
+	cfg, err := config.GetConfig()
 	if err != nil {
 		// Log and exit if there's an error loading the configuration.
 		log.Fatal("Error loading configuration:", err)
@@ -38,7 +38,7 @@ func main() {
 
 	// Initialize the router with the provided configuration. This router handles
 	// requests based on the vhost, endpoint, and backend service configurations.
-	r := router.NewRouter(config)
+	r := router.NewRouter(cfg)
 
 	// Create a new server and configure it.
 	srv := &http.Server{
@@ -69,10 +69,10 @@ func main() {
 	// Log the start of the server and the port on which it is running.
 	log.Infof("Server is ready to handle requests at %s", serverAddr)
 
-	if config.UseTLS {
+	if cfg.UseTLS {
 		srv.TLSConfig = &tls.Config{
 			GetCertificate: func(info *tls.ClientHelloInfo) (*tls.Certificate, error) {
-				for vhostName, vhost := range config.Vhosts {
+				for vhostName, vhost := range cfg.Vhosts {
 					if vhost.TLS != nil {
 						// Using wildcard pattern matching to determine the appropriate certificate.
 						match, err := filepath.Match(vhostName, info.ServerName)
