@@ -9,6 +9,7 @@ GateH8 is a flexible and customizable API Gateway designed to proxy requests to 
 - [Configuration Guide](#configuration-guide)
     - [General Settings](#general-settings)
     - [Path Variables and Wildcards](#path-variables-and-wildcards)
+    - [Environment Variables](#environment-variables)
     - [Virtual Hosts and Routes](#virtual-hosts-and-routes)
     - [Wildcard Domain Routing](#wildcard-domain-routing)
     - [CORS Settings](#cors-settings)
@@ -98,6 +99,10 @@ Additionally, GateH8 supports wildcards within path configurations. By using an 
 ```
 
 The above configuration will match and route requests like `/products/1`, `/products/soap`, and so on.
+
+### Environment Variables
+
+GateH8 supports environment variables in the configuration file. This allows you to define dynamic values for your configuration, such as backend URLs, without having to hardcode them.
 
 ### Virtual Hosts and Routes
 

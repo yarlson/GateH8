@@ -1,8 +1,11 @@
 services:
   gateh8:
-    image: yarlson/gateh8:0.2.1
+    image: yarlson/gateh8:0.3.0
     ports:
       - "80:80"
+    environment:
+      - HOST1=nginx1
+      - HOST2=nginx2
     volumes:
       - ./config.json:/config.json
     command: ["-a", ":80"]

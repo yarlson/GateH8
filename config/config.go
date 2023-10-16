@@ -82,17 +82,19 @@ type Config struct {
 // GetConfig reads the API Gateway's configuration from a JSON file and returns it.
 // It handles any issues with reading or parsing the configuration file.
 func GetConfig() (*Config, error) {
-	content, err := os.ReadFile("config.json")
+	rawConfig, err := os.ReadFile("config.json")
 	if err != nil {
 		return nil, fmt.Errorf("error reading config.json: %w", err)
 	}
 
+	rawConfig = replaceEnvVars(rawConfig)
+
 	config := new(Config) // Use new() to get a pointer directly, prevent local-to-heap migration.
-	if err = json.Unmarshal(content, config); err != nil {
+	if err = json.Unmarshal(rawConfig, config); err != nil {
 		return nil, fmt.Errorf("error parsing config.json: %w", err)
 	}
 
-	anyVhostWithSSL, allVhostsWithSSL := check(config)
+	anyVhostWithSSL, allVhostsWithSSL := checkVhostsWithTLS(config)
 
 	// If there's any vhost with TLS configured but not all of them have, then it's a config error.
 	if anyVhostWithSSL && !allVhostsWithSSL {
@@ -103,7 +105,18 @@ func GetConfig() (*Config, error) {
 	return config, nil
 }
 
-func check(config *Config) (bool, bool) {
+func replaceEnvVars(rawConfig []byte) []byte {
+	// replace ${path} with [[path]] to avoid env var replacement
+	rawConfig = []byte(strings.ReplaceAll(string(rawConfig), "${path}", "[[path]]"))
+	// replace env vars
+	rawConfig = []byte(os.ExpandEnv(string(rawConfig)))
+	// replace [[path]] with ${path} to restore original value
+	rawConfig = []byte(strings.ReplaceAll(string(rawConfig), "[[path]]", "${path}"))
+
+	return rawConfig
+}
+
+func checkVhostsWithTLS(config *Config) (bool, bool) {
 	// Check if any vhost has TLS configured
 	anyVhostWithSSL := false
 	allVhostsWithSSL := true

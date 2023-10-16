@@ -12,7 +12,7 @@
             "GET"
           ],
           "backend": {
-            "url": "http://nginx1/",
+            "url": "http://${HOST1}/",
             "timeout": 5000
           }
         },
@@ -22,7 +22,7 @@
             "GET"
           ],
           "backend": {
-            "url": "http://nginx2/",
+            "url": "http://${HOST2}/",
             "timeout": 5000
           }
         }
